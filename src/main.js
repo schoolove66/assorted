@@ -64,6 +64,9 @@ const categoriesCountSpan = document.getElementById('categories-count');
 // 초기화 및 데이터 로드
 // ----------------------------------------
 async function initializeApp() {
+  // 1. 이벤트 리스너를 먼저 등록하여 DB 연결 상태(또는 지연)와 관계없이 모달 팝업 등 기본 UI가 동작하도록 보장합니다.
+  setupEventListeners();
+
   // DB 접속 상태 아이콘 표시
   const firebaseConnected = isFirebaseConnected();
   if (firebaseConnected) {
@@ -90,8 +93,6 @@ async function initializeApp() {
   } catch (error) {
     console.error("데이터 초기 로드 중 에러 발생:", error);
   }
-
-  setupEventListeners();
 }
 
 // ----------------------------------------
