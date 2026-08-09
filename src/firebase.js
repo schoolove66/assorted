@@ -18,12 +18,56 @@ import {
 
 // 초기 카테고리 더미 데이터 정의
 const DEFAULT_CATEGORIES = [
+  { id: 'tab_lesson', title: '교수학습과정안', icon: '📘' },
+  { id: 'tab_admin', title: '행정패키지', icon: '🗂️' },
   { id: 'tab1', title: '과학자적 사고로 일상 문제 해결 시뮬레이터', icon: '💡' },
   { id: 'tab2', title: '질병을 예방하는 건강 상식 게임', icon: '🦠' }
 ];
 
 // 초기 웹앱 더미 데이터 정의
 const DUMMY_DATA = [
+  {
+    category: 'tab_lesson',
+    title: '생물의 특성과 교수학습과정안',
+    description: '작은 생물의 관찰 및 생물과 비생물의 특징을 파악하고 일상 속 탐구를 연계하는 과학 수업 과정안입니다.',
+    appUrl: 'https://vibe-trash-sorting-bot.vercel.app',
+    imageUrl: '/thumbnails/sci_maze.png'
+  },
+  {
+    category: 'tab_lesson',
+    title: '산성과 염기성 중화 반응 교수학습과정안',
+    description: '실험실 안전 수칙 준수와 함께 중화 반응의 기본 개념을 습득하는 가상 탐구 지도안입니다.',
+    appUrl: 'https://vibe-chem-lab.vercel.app',
+    imageUrl: '/thumbnails/sci_chemistry.png'
+  },
+  {
+    category: 'tab_lesson',
+    title: '바이러스 예방 및 세균 탐구 교수학습과정안',
+    description: '감염병의 예방과 면역 체계에 관한 초/중등 과학 융합 탐구 활동 과정안입니다.',
+    appUrl: 'https://vibe-virus-defender.vercel.app',
+    imageUrl: '/thumbnails/health_shield.png'
+  },
+  {
+    category: 'tab_lesson',
+    title: '올바른 영양소와 건강 습관 지도안',
+    description: '5대 영양소의 체내 역할과 식습관 형성을 위한 시뮬레이션 기반 에듀케이션 과정안입니다.',
+    appUrl: 'https://vibe-healthy-habits.vercel.app',
+    imageUrl: '/thumbnails/health_lifestyle.png'
+  },
+  {
+    category: 'tab_lesson',
+    title: '생태계 보전과 분리배출 융합 지도안',
+    description: '환경 보전의 중요성과 AI 분리배출 로봇 모의 실험을 활용한 환경 과학 과정안입니다.',
+    appUrl: 'https://vibe-trash-sorting-bot.vercel.app',
+    imageUrl: '/thumbnails/sci_maze.png'
+  },
+  {
+    category: 'tab_lesson',
+    title: '화학 반응 속도와 온도 측정 수업 지도안',
+    description: '온도에 따른 화학 반응 속도 변화를 디지털 계측기로 확인하는 과학 탐구 수업안입니다.',
+    appUrl: 'https://vibe-chem-lab.vercel.app',
+    imageUrl: '/thumbnails/sci_chemistry.png'
+  },
   {
     category: 'tab1',
     title: '우리 동네 쓰레기 분리배출 봇',

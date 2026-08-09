@@ -287,8 +287,8 @@ button, input, select, textarea {
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
   opacity: 1;
   transition: opacity var(--transition-normal);
 }
@@ -879,9 +879,16 @@ button, input, select, textarea {
     font-size: 0.9rem;
   }
   .projects-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
   }
   .admin-panel-container {
     max-height: 75vh;
+  }
+}
+
+@media (max-width: 640px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
   }
 }
