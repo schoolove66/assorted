@@ -331,7 +331,8 @@ function setupEventListeners() {
   });
 
   // 관리자 비밀번호 검증 핸들링
-  authForm.addEventListener('submit', () => {
+  authForm.addEventListener('submit', (e) => {
+    if (e) e.preventDefault();
     const configuredPassword = import.meta.env.VITE_ADMIN_PASSWORD || defaultAdminPassword;
     const inputPassword = adminPasswordInput.value.trim();
 
@@ -349,7 +350,8 @@ function setupEventListeners() {
   });
 
   // 1) 카테고리 등록 폼
-  categoryForm.addEventListener('submit', async () => {
+  categoryForm.addEventListener('submit', async (e) => {
+    if (e) e.preventDefault();
     const title = categoryTitleInput.value.trim();
     const icon = categoryIconInput.value.trim();
 
@@ -379,7 +381,8 @@ function setupEventListeners() {
   });
 
   // 2) 웹앱 등록 폼 (등록 & 수정 통합)
-  projectForm.addEventListener('submit', async () => {
+  projectForm.addEventListener('submit', async (e) => {
+    if (e) e.preventDefault();
     const editId = editProjectIdInput.value;
     const category = projectCategorySelect.value;
     const title = projectTitleInput.value.trim();

@@ -132,40 +132,48 @@ function setLocalProjects(projects) {
 function compressImageFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
+    
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result;
+      
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxDimension = 600; // 최대 가로/세로 길이를 600px로 축소
-        let width = img.width;
-        let height = img.height;
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDimension = 600; // 최대 가로/세로 길이를 600px로 축소
+          let width = img.width;
+          let height = img.height;
 
-        if (width > height) {
-          if (width > maxDimension) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
+          if (width > height) {
+            if (width > maxDimension) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            }
+          } else {
+            if (height > maxDimension) {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
           }
-        } else {
-          if (height > maxDimension) {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // JPEG 포맷 화질 0.7 비율로 인코딩 (Base64 파일 크기 절약)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(dataUrl);
+        } catch (err) {
+          reject(err);
         }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // JPEG 포맷 화질 0.7 비율로 인코딩 (Base64 파일 크기 절약)
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        resolve(dataUrl);
       };
+      
       img.onerror = (err) => reject(err);
+      img.src = event.target.result; // onload/onerror 이벤트 리스너 등록 후에 src 할당
     };
+    
     reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file); // onload/onerror 이벤트 리스너 등록 후에 readAsDataURL 호출
   });
 }
 
@@ -392,11 +400,20 @@ export async function uploadImage(file) {
     try {
       const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
       const storageRef = ref(storage, `thumbnails/${filename}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      return downloadURL;
+      
+      // Firebase Storage 타임아웃 5초 설정 (타임아웃 발생 시 Base64로 자동 우회)
+      const uploadPromise = (async () => {
+        const snapshot = await uploadBytes(storageRef, file);
+        return await getDownloadURL(snapshot.ref);
+      })();
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Storage 업로드 시간 초과")), 5000)
+      );
+
+      return await Promise.race([uploadPromise, timeoutPromise]);
     } catch (error) {
-      console.error("Firebase Storage 업로드 실패, Base64 압축으로 우회합니다:", error);
+      console.warn("Firebase Storage 업로드 실패/타임아웃, Base64 압축으로 우회합니다:", error);
       return await compressImageFile(file);
     }
   } else {
