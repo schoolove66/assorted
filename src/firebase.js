@@ -55,10 +55,13 @@ const DUMMY_DATA = [
 ];
 
 // Firebase 설정 확인
+const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+
 const isFirebaseConfigured = 
-  import.meta.env.VITE_FIREBASE_API_KEY && 
-  import.meta.env.VITE_FIREBASE_PROJECT_ID &&
-  import.meta.env.VITE_FIREBASE_PROJECT_ID !== 'your_project_id';
+  Boolean(apiKey) && 
+  Boolean(projectId) && 
+  projectId !== 'your_project_id';
 
 let db = null;
 let storage = null;
@@ -83,7 +86,10 @@ if (isFirebaseConfigured) {
     console.error("Firebase 초기화 중 에러 발생, LocalStorage 모드로 대체합니다:", error);
   }
 } else {
-  console.log("Firebase 환경 변수가 설정되지 않았거나 예시 값입니다. LocalStorage 모드로 동작합니다.");
+  console.warn("Firebase 설정 상태 미흡:");
+  console.warn("- VITE_FIREBASE_API_KEY 존재 여부:", Boolean(apiKey));
+  console.warn("- VITE_FIREBASE_PROJECT_ID 존재 여부:", Boolean(projectId));
+  console.warn("Firebase 환경 변수가 설정되지 않았거나 예시 값입니다. LocalStorage 모드로 동작합니다.");
 }
 
 // ----------------------------------------
@@ -167,10 +173,63 @@ function compressImageFile(file) {
 // 공용 API 함수 목록
 // ----------------------------------------
 
+// ----------------------------------------
+// LocalStorage -> Firebase 자동 마이그레이션 함수
+// ----------------------------------------
+export async function syncLocalToFirebase() {
+  if (!useFirebase || !db) return;
+
+  const isMigrated = localStorage.getItem('vibe_migrated_to_firebase');
+  if (isMigrated === 'true') return;
+
+  try {
+    console.log("로컬 데이터(LocalStorage)를 Firebase 클라우드로 자동 마이그레이션 시작...");
+    
+    // 1. 카테고리 동기화
+    const localCats = getLocalCategories();
+    const catQuerySnapshot = await getDocs(collection(db, 'categories'));
+    const existingCatIds = new Set();
+    catQuerySnapshot.forEach(docSnap => existingCatIds.add(docSnap.id));
+
+    for (const cat of localCats) {
+      if (!existingCatIds.has(cat.id)) {
+        await setDoc(doc(db, 'categories', cat.id), { title: cat.title, icon: cat.icon });
+        console.log(`카테고리 클라우드 이관 완료: ${cat.title}`);
+      }
+    }
+
+    // 2. 게시글(프로젝트) 동기화
+    const localProjects = getLocalProjects();
+    const projQuerySnapshot = await getDocs(collection(db, 'projects'));
+    const existingTitles = new Set();
+    projQuerySnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.title) existingTitles.add(data.title);
+    });
+
+    for (const proj of localProjects) {
+      // 제목 기준으로 중복 업로드 방지
+      if (!existingTitles.has(proj.title)) {
+        const { id, ...projectData } = proj;
+        await addDoc(collection(db, 'projects'), projectData);
+        console.log(`게시글 클라우드 이관 완료: ${proj.title}`);
+      }
+    }
+
+    localStorage.setItem('vibe_migrated_to_firebase', 'true');
+    console.log("로컬 데이터의 Firebase 자동 이관이 성공적으로 완료되었습니다.");
+  } catch (error) {
+    console.error("로컬 데이터 Firebase 이관 중 오류 발생:", error);
+  }
+}
+
 // [1] 카테고리 관리 API
 export async function getCategories() {
   if (useFirebase && db) {
     try {
+      // 최초 연결 시 로컬 데이터를 Firebase로 자동 동기화 시도
+      await syncLocalToFirebase();
+
       const querySnapshot = await getDocs(collection(db, 'categories'));
       const categories = [];
       querySnapshot.forEach((docSnapshot) => {
@@ -238,6 +297,9 @@ export async function deleteCategory(id) {
 export async function getProjects() {
   if (useFirebase && db) {
     try {
+      // 최초 연결 시 로컬 데이터를 Firebase로 자동 동기화 시도
+      await syncLocalToFirebase();
+
       const querySnapshot = await getDocs(collection(db, 'projects'));
       const projects = [];
       querySnapshot.forEach((docSnapshot) => {
